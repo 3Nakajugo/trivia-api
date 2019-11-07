@@ -98,3 +98,18 @@ createdb trivia_test
 psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
+
+ntroduction
+Getting Started
+Base URL
+API Keys /Authentication (if applicable)
+Errors
+Response codes
+Messages
+Error types
+Resource endpoint library
+Organized by resource
+Include each endpoint
+Sample request
+Arguments including data types
+Response object including status codes and data types
