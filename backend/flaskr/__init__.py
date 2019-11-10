@@ -127,20 +127,18 @@ def create_app(test_config=None):
     '''
       Endpoint to delete a question 
     '''
-    try:
-      question = Question.query.filter_by(id=id).first()
+  
+    question = Question.query.filter_by(id=id).first()
 
-      if not question:
-          abort(404, "Question with id not found")
-      question.delete()
+    if not question:
+        abort(404, "Question with id not found")
+    question.delete()
 
-      return jsonify({
-          'success': True,
-          'question_id': id,
-          'message': 'Question Successfully deleted.'
-      }), 200
-    except:
-      abort(422)
+    return jsonify({
+        'success': True,
+        'question_id': id,
+        'message': 'Question Successfully deleted.'
+    }), 200
 
   '''
   @TODO: 
