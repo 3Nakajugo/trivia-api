@@ -42,7 +42,7 @@ def create_app(test_config=None):
     start = (page - 1) * QUESTOINS_PER_PAGE
     end = start + QUESTOINS_PER_PAGE
 
-    allRecords = []
+    allRecords = []  
 
     for item, category in selection:
         item = item.format()
@@ -169,7 +169,7 @@ def create_app(test_config=None):
                         category=int(category), 
                         difficulty=int(difficulty))
     question.insert()
-    
+
     return jsonify({
       'success': True,
       'message': 'Question Successfully added.'
@@ -185,6 +185,39 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
+  @app.route('/questions/search', methods=['POST'])
+  def search_quetions_by_search_term():
+    '''
+      Endpoint to handle search questions by search term
+    '''
+    data = request.get_json()
+    print(data)
+    search_term = data["searchTerm"]
+    page = request.args.get('page', 1, type=int)
+
+    questions = Question.query.join(
+        Category, Category.id == Question.category
+    ).add_columns(Category.type).all()
+
+    current_questions = paginate_questions(page, questions)
+
+    questions = []
+    for question in current_questions:
+        if search_term.lower() in question['question'].lower():
+            questions.append(question)
+    print(questions)
+    categories = []
+    all_categories = Category.query.all()
+    for item in all_categories:
+        categories.append(item.type)
+
+    return jsonify({
+        'success': True,
+        'questions': questions,
+        'total_questions': len(questions),
+        'categories': categories,
+        'current_category': None
+    }), 200
 
   '''
   @TODO: 
@@ -194,6 +227,37 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+  @app.route('/categories/<int:id>/questions')
+  def get_questions_by_category(id):
+    '''
+      Endpoint to handle get questions by category
+    '''
+    page = request.args.get('page', 1, type=int)
+
+    questions = Question.query.filter_by(category=id).join(
+        Category,
+        Category.id == Question.category
+      ).add_columns(Category.type).all()
+      
+    current_questions = paginate_questions(page, questions)
+
+    if len(current_questions) == 0:
+      abort(404)
+
+    category = Category.query.filter_by(id=id).first()
+    all_categories = Category.query.all()
+    categories = []
+
+    for item in all_categories:
+      categories.append(item.type)
+
+    return jsonify({
+      'success': True,
+      'questions': current_questions,
+      'total_questions': len(questions),
+      'categories': categories,
+      'current_category': category.type
+      }), 200
 
 
   '''
@@ -207,6 +271,31 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+  @app.route('/quizzes', methods=['POST'])
+  def get_quiz_questions():
+    '''
+      Edpoint to get questions to play quiz
+    '''
+    data = request.get_json()
+
+    category = data['quiz_category']
+    
+    questions = Question.query.filter_by(
+        category=category['id']
+    ).filter(Question.id.notin_(data['previous_questions'])).all()
+
+    if category['id'] == 0:
+      questions = Question.query.filter(
+        Question.id.notin_(data['previous_questions'])).all()
+
+    question = None
+    if questions:
+      question = random.choice(questions).format()
+
+    return jsonify({
+      'success': True,
+      'question': question
+    }), 200
 
   '''
   @TODO: 
